@@ -1139,6 +1139,11 @@ static void uv__read(uv_stream_t* stream) {
           uv__stream_osx_interrupt_select(stream);
         }
         stream->read_cb(stream, 0, &buf);
+      } else if (errno == ECONNRESET) {
+        /* Use EOF. Platforms differ on read(2) implementation, namely FreeBSD
+         * returning ECONNRESET when OSX returns EOF.
+         */
+        uv__stream_eof(stream, &buf);
       } else {
         /* Error. User should call uv_close(). */
         stream->read_cb(stream, -errno, &buf);
